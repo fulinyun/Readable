@@ -59,7 +59,7 @@ class EditPost extends Component {
       `http://localhost:3001/posts/${id}`,
       {
         method: 'PUT',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', 'Authorization': 'whatever-you-want' },
         body: JSON.stringify({ title: this.state.title, body: this.state.body }),
       }
     )
@@ -76,7 +76,7 @@ class EditPost extends Component {
       'http://localhost:3001/posts',
       {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', 'Authorization': 'whatever-you-want' },
         body: JSON.stringify({
           id: uuidv1(),
           timestamp,
@@ -92,13 +92,13 @@ class EditPost extends Component {
   }
 
   fetchPost = (id) => {
-    fetch(`http://localhost:3001/posts/${id}`)
+    fetch(`http://localhost:3001/posts/${id}`, { headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(post => this.props.fetchPost(post))
   }
 
   fetchPosts = () => {
-    fetch(`http://localhost:3001/posts`)
+    fetch(`http://localhost:3001/posts`, { headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(posts => this.props.fetchPosts(posts))
   }

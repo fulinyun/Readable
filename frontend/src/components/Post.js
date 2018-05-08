@@ -23,7 +23,7 @@ class Post extends Component {
 
     const { category, post } = this.props
 
-    fetch(`http://localhost:3001/posts/${post.post.id}`, { method: 'DELETE' })
+    fetch(`http://localhost:3001/posts/${post.post.id}`, { method: 'DELETE', headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(_ => this.props.closeModal())
       .then(_ => this.fetchPosts())
@@ -32,13 +32,13 @@ class Post extends Component {
   }
 
   fetchPosts () {
-    fetch('http://localhost:3001/posts')
+    fetch('http://localhost:3001/posts', { headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(posts => this.props.fetchPosts(posts))
   }
 
   fetchCategoryPosts (category) {
-    fetch(`http://localhost:3001/${category}/posts`)
+    fetch(`http://localhost:3001/${category}/posts`, { headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(posts => this.props.fetchCategoryPosts(category, posts))
   }

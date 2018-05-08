@@ -16,7 +16,7 @@ class Categories extends Component {
 
     e.preventDefault()
 
-    fetch(`http://localhost:3001/${category}/posts`)
+    fetch(`http://localhost:3001/${category}/posts`, { headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(posts => this.props.fetchCategoryPosts(category, posts))
       .then(_ => this.openCategoryModal())

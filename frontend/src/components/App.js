@@ -17,13 +17,13 @@ class App extends Component {
   }
 
   fetchCategories = () => {
-    fetch('http://localhost:3001/categories')
+    fetch('http://localhost:3001/categories', { headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(({ categories }) => this.props.fetchCategories(categories))    
   }
 
   fetchPosts = () => {
-    fetch('http://localhost:3001/posts')
+    fetch('http://localhost:3001/posts', { headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(posts => this.props.fetchPosts(posts))
   }

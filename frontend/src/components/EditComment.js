@@ -57,7 +57,7 @@ class EditComment extends Component {
       `http://localhost:3001/comments/${id}`,
       {
         method: 'PUT',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', 'Authorization': 'whatever-you-want' },
         body: JSON.stringify({ timestamp: Date.now(), body: this.state.body }),
       }
     )
@@ -75,7 +75,7 @@ class EditComment extends Component {
       'http://localhost:3001/comments',
       {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', 'Authorization': 'whatever-you-want' },
         body: JSON.stringify({
           id: uuidv1(),
           timestamp,
@@ -92,19 +92,19 @@ class EditComment extends Component {
   }
 
   fetchPostComments = (id) => {
-    fetch(`http://localhost:3001/posts/${id}/comments`)
+    fetch(`http://localhost:3001/posts/${id}/comments`, { headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(comments => this.props.fetchPostComments(comments))
   }
 
   fetchPost (id) {
-    fetch(`http://localhost:3001/posts/${id}`)
+    fetch(`http://localhost:3001/posts/${id}`, { headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(post => this.props.fetchPost(post))
   }
 
   fetchPosts = () => {
-    fetch(`http://localhost:3001/posts`)
+    fetch(`http://localhost:3001/posts`, { headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(posts => this.props.fetchPosts(posts))
   }

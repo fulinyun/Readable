@@ -29,6 +29,8 @@ function category (state = {}, { type, category, posts }) {
 function posts (state = {}, { type, posts }) {  
   switch (type) {
     case FETCH_POSTS:
+      console.log('reducer posts')
+      console.log(posts)
       return {
         posts,
       }

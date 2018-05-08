@@ -15,7 +15,7 @@ class Comments extends Component {
   editComment = (id) => (e) => {
     e.preventDefault()
 
-    fetch(`http://localhost:3001/comments/${id}`)
+    fetch(`http://localhost:3001/comments/${id}`, { headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(comment => this.props.fetchComment(comment))
       .then(_ => this.openCommentModal())
@@ -24,7 +24,7 @@ class Comments extends Component {
   deleteComment = (id, parentId) => (e) => {
     e.preventDefault()
 
-    fetch(`http://localhost:3001/comments/${id}`, { method: 'DELETE' })
+    fetch(`http://localhost:3001/comments/${id}`, { method: 'DELETE', headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(_ => this.fetchPostComments(parentId))
       .then(_ => this.fetchPost(parentId))
@@ -32,19 +32,19 @@ class Comments extends Component {
   }
 
   fetchPostComments (id) {
-    fetch(`http://localhost:3001/posts/${id}/comments`)
+    fetch(`http://localhost:3001/posts/${id}/comments`, { headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(comments => this.props.fetchPostComments(comments))
   }
 
   fetchPost (id) {
-    fetch(`http://localhost:3001/posts/${id}`)
+    fetch(`http://localhost:3001/posts/${id}`, { headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(post => this.props.fetchPost(post))
   }
 
   fetchPosts () {
-    fetch('http://localhost:3001/posts')
+    fetch('http://localhost:3001/posts', { headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(posts => this.props.fetchPosts(posts))
   }

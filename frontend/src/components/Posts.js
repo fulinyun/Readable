@@ -16,7 +16,7 @@ class Posts extends Component {
     if (category.category) {
       return category.posts
     } else {
-      return posts
+      return posts.posts
     }
   }
 
@@ -31,7 +31,7 @@ class Posts extends Component {
     if (category.category) {
       fetchCategoryPosts(category.category, category.posts.sort(sortPostFunc))
     } else {
-      fetchPosts(posts.sort(sortPostFunc))
+      fetchPosts(posts.posts.sort(sortPostFunc))
     }
 
     this.setState(() => ({
@@ -50,7 +50,7 @@ class Posts extends Component {
     if (category.category) {
       fetchCategoryPosts(category.category, category.posts.sort(sortPostFunc))
     } else {
-      fetchPosts(posts.sort(sortPostFunc))
+      fetchPosts(posts.posts.sort(sortPostFunc))
     }
 
     this.setState(() => ({
@@ -65,14 +65,14 @@ class Posts extends Component {
 
     e.preventDefault()
 
-    fetch(`http://localhost:3001/posts/${id}`)
+    fetch(`http://localhost:3001/posts/${id}`, { headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(post => this.props.fetchPost(post))
       .then(_ => this.fetchPostComments(id))
   }
 
   fetchPostComments (id) {
-    fetch(`http://localhost:3001/posts/${id}/comments`)
+    fetch(`http://localhost:3001/posts/${id}/comments`, { headers: { 'Authorization': 'whatever-you-want' } })
       .then(response => response.json())
       .then(comments => this.props.fetchPostComments(comments))
       .then(_ => this.openPostModal())
@@ -87,8 +87,8 @@ class Posts extends Component {
     const { postModalOpen } = this.state
     const posts = this.getPostsToShow()
 
-    return (posts.length === 0 ? <div>There is no posts in this category.</div> :
-      <div>
+    return (posts && posts.length > 0
+    ? <div>
         <h1>Posts:</h1>
         <table>
         <thead>
@@ -128,6 +128,7 @@ class Posts extends Component {
           {postModalOpen && <Post closeModal={this.closePostModal} />}
         </Modal>
       </div>
+    : <div>There is no posts in this category.</div>
     )
   }
 }
@@ -135,7 +136,7 @@ class Posts extends Component {
 function mapStateToProps ({ category, posts }) {
   return {
     category,
-    posts: posts.posts ? posts.posts : [],
+    posts,
   }
 }
 

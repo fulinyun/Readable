@@ -1,25 +1,32 @@
 import React, { Component } from 'react'
-import { connect } from 'react-redux'
-import { fetchPosts, fetchPostComments, unselectComment, fetchPost } from '../actions'
 import uuidv1 from 'uuid/v1'
+import { connect } from 'react-redux'
+import Api from '../apis'
 
 class EditComment extends Component {
+  state = {
+    ready: false,
+    body: '',
+    author: '',
+  }
+
   constructor(props) {
     super(props)
-
-    if (props.comment.comment) {
-      this.state = props.comment.comment
-    } else {
-      this.state = {
-        body: '',
-        author: '',
-      }
-    }
 
     this.updateBody = this.updateBody.bind(this);
     this.updateAuthor = this.updateAuthor.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.close = this.close.bind(this);
+  }
+
+  componentDidMount () {
+    const { commentId } = this.props.match.params
+
+    if (commentId) {
+      Api.fetchComment(commentId).then(({ body, author }) => this.setState({ body, author, ready: true}))
+    } else {
+      this.setState({ ready: true })
+    }
   }
 
   updateBody (e) {
@@ -32,88 +39,35 @@ class EditComment extends Component {
 
   handleSubmit (e) {
     e.preventDefault()
+    const { dispatch, match, history } = this.props
+    const { postId, commentId } = match.params
 
-    const { post, comment, closeModal, unselectComment } = this.props
-
-    comment.comment && comment.comment.id
-      ? this.editComment(comment.comment.id, comment.comment.parentId)
-      : this.createComment(post.post.id)
-    
-    closeModal()
-    unselectComment()
+    commentId ?
+      this.editComment(commentId).then(_ => Api.fetchComments(dispatch, postId)).then(history.goBack()) :
+      this.createComment(postId).then(_ => Api.fetchComments(dispatch, postId)).then(history.goBack())
   }
 
   close (e) {
     e.preventDefault()
-
-    const { closeModal, unselectComment } = this.props
-
-    closeModal()
-    unselectComment()
+    this.props.history.goBack()
   }
 
-  editComment = (id, parentId) => {
-    fetch(
-      `http://localhost:3001/comments/${id}`,
-      {
-        method: 'PUT',
-        headers: { 'content-type': 'application/json', 'Authorization': 'whatever-you-want' },
-        body: JSON.stringify({ timestamp: Date.now(), body: this.state.body }),
-      }
-    )
-      .then(response => response.json())
-      .then(_ => this.fetchPostComments(parentId))
-      .then(_ => this.fetchPost(parentId))
-      .then(_ => this.fetchPosts())
-  }
-
-  createComment = (parentId) => {
+  editComment = (id) => Api.editComment(id, Date.now(), this.state.body)
+  
+  createComment = (postId) => {
+    const id = uuidv1()
     const timestamp = Date.now()
     const { body, author } = this.state
+    const parentId = postId
 
-    fetch(
-      'http://localhost:3001/comments',
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'Authorization': 'whatever-you-want' },
-        body: JSON.stringify({
-          id: uuidv1(),
-          timestamp,
-          body,
-          author,
-          parentId,
-        }),
-      }
-    )
-      .then(response => response.json())
-      .then(_ => this.fetchPostComments(parentId))
-      .then(_ => this.fetchPost(parentId))
-      .then(_ => this.fetchPosts())
-  }
-
-  fetchPostComments = (id) => {
-    fetch(`http://localhost:3001/posts/${id}/comments`, { headers: { 'Authorization': 'whatever-you-want' } })
-      .then(response => response.json())
-      .then(comments => this.props.fetchPostComments(comments))
-  }
-
-  fetchPost (id) {
-    fetch(`http://localhost:3001/posts/${id}`, { headers: { 'Authorization': 'whatever-you-want' } })
-      .then(response => response.json())
-      .then(post => this.props.fetchPost(post))
-  }
-
-  fetchPosts = () => {
-    fetch(`http://localhost:3001/posts`, { headers: { 'Authorization': 'whatever-you-want' } })
-      .then(response => response.json())
-      .then(posts => this.props.fetchPosts(posts))
+    return Api.createComment({ id, timestamp, body, author, parentId })
   }
 
   render() {
-    const { comment } = this.props
-    const { body, author } = this.state
+    const { commentId } = this.props.match.params
+    const { ready, body, author } = this.state
 
-    return (
+    return ready ? (
       <div>
         <p>
           <label>Comment:</label>
@@ -131,7 +85,7 @@ class EditComment extends Component {
             placeholder='Author name'
             value={author}
             onChange={this.updateAuthor}
-            disabled={comment.comment ? true : false}
+            disabled={commentId ? true : false}
           />
         </p>
         <p>
@@ -139,24 +93,14 @@ class EditComment extends Component {
           <button onClick={this.close}>Close</button>
         </p>
       </div>
-    )
-  }
-}
-
-function mapStateToProps ({ post, comment }) {
-  return {
-    post,
-    comment,
+    ) : <div><p>Loading...</p></div>
   }
 }
 
 function mapDispatchToProps (dispatch) {
   return {
-    fetchPosts: (posts) => dispatch(fetchPosts(posts)),
-    fetchPostComments: (comments) => dispatch(fetchPostComments(comments)),
-    fetchPost: (post) => dispatch(fetchPost(post)),
-    unselectComment: () => dispatch(unselectComment()),
+    dispatch,
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(EditComment)
+export default connect(null, mapDispatchToProps)(EditComment)

@@ -1,22 +1,19 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { fetchPosts, fetchPost } from '../actions'
 import uuidv1 from 'uuid/v1'
+import Api from '../apis'
 
 class EditPost extends Component {
+  state = {
+    ready: false,
+    category: '',
+    title: '',
+    body: '',
+    author: '',
+  }
+
   constructor(props) {
     super(props)
-
-    if (props.post.post) {
-      this.state = props.post.post
-    } else {
-      this.state = {
-        category: props.categories.categories[0].path,
-        title: '',
-        body: '',
-        author: '',
-      }
-    }
 
     this.updateCategory = this.updateCategory.bind(this);
     this.updateTitle = this.updateTitle.bind(this);
@@ -24,6 +21,23 @@ class EditPost extends Component {
     this.updateAuthor = this.updateAuthor.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.close = this.close.bind(this);
+  }
+
+  componentDidMount () {
+    const { postId } = this.props.match.params
+    const { categories, dispatch } = this.props
+    if (postId) {
+      Api.fetchPost(postId).then(post => {
+        const { category, title, body, author } = post
+        this.setState({ category, title, body, author, ready: true })
+      })
+    } else {
+      if (categories === undefined || categories.length === 0) {
+        Api.fetchCategories(dispatch).then(_ => this.setState({ ready: true }))
+      } else {
+        this.setState({ ready: true })
+      }
+    }
   }
 
   updateCategory (e) {
@@ -43,80 +57,49 @@ class EditPost extends Component {
 
   handleSubmit (e) {
     e.preventDefault()
-
-    this.props.post.post && this.props.post.post.id ? this.editPost(this.props.post.post.id) : this.createPost()
-    this.props.closeModal()
+    const { postId } = this.props.match.params
+    const { history } = this.props
+    if (postId) {
+      this.editPost(postId).then(_ => history.goBack())
+    } else {
+      this.createPost().then(_ => history.goBack())
+    }
   }
 
   close (e) {
     e.preventDefault()
-
-    this.props.closeModal()
+    this.props.history.goBack()
   }
 
-  editPost = (id) => {
-    fetch(
-      `http://localhost:3001/posts/${id}`,
-      {
-        method: 'PUT',
-        headers: { 'content-type': 'application/json', 'Authorization': 'whatever-you-want' },
-        body: JSON.stringify({ title: this.state.title, body: this.state.body }),
-      }
-    )
-      .then(response => response.json())
-      .then(_ => this.fetchPost(id))
-      .then(_ => this.fetchPosts())
-  }
+  editPost = (postId) => {
+    const { title, body } = this.state
+    return Api.editPost(postId, title, body)
+  }  
 
   createPost = () => {
+    const id = uuidv1()
     const timestamp = Date.now()
     const { title, body, author, category } = this.state
 
-    fetch(
-      'http://localhost:3001/posts',
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'Authorization': 'whatever-you-want' },
-        body: JSON.stringify({
-          id: uuidv1(),
-          timestamp,
-          title,
-          body,
-          author,
-          category,
-        }),
-      }
-    )
-      .then(response => response.json())
-      .then(_ => this.fetchPosts())
-  }
-
-  fetchPost = (id) => {
-    fetch(`http://localhost:3001/posts/${id}`, { headers: { 'Authorization': 'whatever-you-want' } })
-      .then(response => response.json())
-      .then(post => this.props.fetchPost(post))
-  }
-
-  fetchPosts = () => {
-    fetch(`http://localhost:3001/posts`, { headers: { 'Authorization': 'whatever-you-want' } })
-      .then(response => response.json())
-      .then(posts => this.props.fetchPosts(posts))
+    return Api.createPost({ id, timestamp, title, body, author, category })
   }
 
   render() {
-    const { categories, post } = this.props
-    const { category, title, body, author } = this.state
+    const { categories } = this.props
+    const { postId } = this.props.match.params
+    const { ready, category, title, body, author } = this.state
+    if (ready && category === '') this.setState({ category: categories[0].path })
 
-    return (
+    return ready ? (
       <div>
         <p>
           <label>Category:</label>
           <select
             value={category}
             onChange={this.updateCategory}
-            disabled={post.post ? true : false}
+            disabled={postId ? true : false}
           >
-            {categories.categories.map((category) => (
+            {categories.map((category) => (
               <option
                 key={category.path}
                 value={category.path}
@@ -151,7 +134,7 @@ class EditPost extends Component {
             placeholder='Author name'
             value={author}
             onChange={this.updateAuthor}
-            disabled={post.post ? true : false}
+            disabled={postId ? true : false}
           />
         </p>
         <p>
@@ -159,21 +142,19 @@ class EditPost extends Component {
           <button onClick={this.close}>Close</button>
         </p>
       </div>
-    )
+    ) : <div><p>Loading...</p></div>
   }
 }
 
-function mapStateToProps ({ categories, post }) {
+function mapStateToProps ({ categories }) {
   return {
-    categories,
-    post,
+    categories: categories.categories,
   }
 }
 
 function mapDispatchToProps (dispatch) {
   return {
-    fetchPosts: (posts) => dispatch(fetchPosts(posts)),
-    fetchPost: (post) => dispatch(fetchPost(post)),
+    dispatch,
   }
 }
 

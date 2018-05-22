@@ -1,58 +1,37 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import Modal from 'react-modal'
-import { fetchCategoryPosts } from '../actions'
-import CategoryDetails from './CategoryDetails'
+import { Link } from 'react-router-dom'
+import Api from '../apis'
 
 class Categories extends Component {
   state = {
-    categoryModalOpen: false,
+    ready: false,
   }
 
-  fetchCategoryPosts = (category) => (e) => {
-    if (!category) {
-      return
-    }
-
-    e.preventDefault()
-
-    fetch(`http://localhost:3001/${category}/posts`, { headers: { 'Authorization': 'whatever-you-want' } })
-      .then(response => response.json())
-      .then(posts => this.props.fetchCategoryPosts(category, posts))
-      .then(_ => this.openCategoryModal())
+  componentDidMount () {
+    Api.fetchCategories(this.props.dispatch).then(_ => this.setState({ ready: true }))
   }
-
-  openCategoryModal = () => this.setState(() => ({ categoryModalOpen: true }))
-  closeCategoryModal = () => this.setState(() => ({ categoryModalOpen: false }))
 
   render() {
     const { categories } = this.props
-    const { categoryModalOpen } = this.state
+    const { ready } = this.state
 
-    return (
-      <div>
+    return ready ? 
+      (<div>
         <h1>Categories:</h1>
         <ul>
-        {categories && categories.map(category => (
-          <li key={category.path}>
+        {categories.map(({ name, path }) => (
+          <li key={path}>
             <p>
-              {category.name}
-              <button onClick={this.fetchCategoryPosts(category.path)}>Details</button>
+              <Link to={`/${path}`}>
+                {name}
+              </Link>
             </p>
           </li>
         ))}
         </ul>
-        <Modal
-          className='modal'
-          overlayClassName='overlay'
-          isOpen={categoryModalOpen}
-          onRequestClose={this.closeCategoryModal}
-          contentLabel='Modal'
-        >
-          {categoryModalOpen && <CategoryDetails closeModal={this.closeCategoryModal} />}
-        </Modal>
-      </div>
-    )
+      </div>) :
+      (<div><p>Loading categories...</p></div>)
   }
 }
 
@@ -64,7 +43,7 @@ function mapStateToProps ({ categories }) {
 
 function mapDispatchToProps (dispatch) {
   return {
-    fetchCategoryPosts: (category, posts) => dispatch(fetchCategoryPosts({ category, posts })),
+    dispatch,
   }
 }
 

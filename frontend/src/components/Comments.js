@@ -1,101 +1,67 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import Modal from 'react-modal'
-import { fetchComment, fetchPostComments, fetchPost, fetchPosts } from '../actions'
-import EditComment from './EditComment'
+import { Link } from 'react-router-dom'
+import Api from '../apis'
 
 class Comments extends Component {
   state = {
-    commentModalOpen: false,
+    ready: false,
   }
 
-  closeCommentModal = () => this.setState({commentModalOpen: false})
-  openCommentModal = () => this.setState({commentModalOpen: true})
+  componentDidMount () {
+    const { dispatch, postId } = this.props
+    Api.fetchComments(dispatch, postId).then(_ => this.setState({ ready: true }))
+  }
 
-  editComment = (id) => (e) => {
+  upVoteComment = (id) => (e) => {
     e.preventDefault()
-
-    fetch(`http://localhost:3001/comments/${id}`, { headers: { 'Authorization': 'whatever-you-want' } })
-      .then(response => response.json())
-      .then(comment => this.props.fetchComment(comment))
-      .then(_ => this.openCommentModal())
+    Api.upVoteComment(id).then(_ => Api.fetchComments(this.props.dispatch, this.props.postId))
   }
 
-  deleteComment = (id, parentId) => (e) => {
+  downVoteComment = (id) => (e) => {
     e.preventDefault()
-
-    fetch(`http://localhost:3001/comments/${id}`, { method: 'DELETE', headers: { 'Authorization': 'whatever-you-want' } })
-      .then(response => response.json())
-      .then(_ => this.fetchPostComments(parentId))
-      .then(_ => this.fetchPost(parentId))
-      .then(_ => this.fetchPosts())
+    Api.downVoteComment(id).then(_ => Api.fetchComments(this.props.dispatch, this.props.postId))
   }
 
-  fetchPostComments (id) {
-    fetch(`http://localhost:3001/posts/${id}/comments`, { headers: { 'Authorization': 'whatever-you-want' } })
-      .then(response => response.json())
-      .then(comments => this.props.fetchPostComments(comments))
-  }
-
-  fetchPost (id) {
-    fetch(`http://localhost:3001/posts/${id}`, { headers: { 'Authorization': 'whatever-you-want' } })
-      .then(response => response.json())
-      .then(post => this.props.fetchPost(post))
-  }
-
-  fetchPosts () {
-    fetch('http://localhost:3001/posts', { headers: { 'Authorization': 'whatever-you-want' } })
-      .then(response => response.json())
-      .then(posts => this.props.fetchPosts(posts))
+  deleteComment = (id) => (e) => {
+    e.preventDefault()
+    Api.deleteComment(id).then(_ => Api.fetchComments(this.props.dispatch, this.props.postId))
   }
 
   render() {
-    const { post, comments } = this.props
-    const { commentModalOpen } = this.state
+    const { categoryPath, postId, comments } = this.props
+    const { ready } = this.state
 
-    return (
+    return ready ? (
       <div>
         <h3>Comments</h3>
-        {comments && comments.map(comment => (
+        {comments.map(comment => (
           <div key={comment.id}>
             <p>{comment.body}</p>
             <p>{comment.author} - {new Date(comment.timestamp).toString()}</p>
             <p>Vote score: {comment.voteScore}</p>
             <p>
-              <button onClick={this.editComment(comment.id)}>Edit</button>
-              <button onClick={this.deleteComment(comment.id, post.id)}>Delete</button>
+              <button onClick={this.upVoteComment(comment.id)}>UpVote</button>
+              <button onClick={this.downVoteComment(comment.id)}>DownVote</button>
+              <Link to={`/${categoryPath}/${postId}/${comment.id}/edit`}>Edit</Link>
+              <button onClick={this.deleteComment(comment.id)}>Delete</button>
             </p>
           </div>
         ))}
-        <Modal
-          className='modal'
-          overlayClassName='overlay'
-          isOpen={commentModalOpen}
-          onRequestClose={this.closeCommentModal}
-          contentLabel='Modal'
-        >
-          {commentModalOpen && <EditComment closeModal={this.closeCommentModal} />}
-        </Modal>
       </div>
-    )
+    ) : <div><p>Loading comments...</p></div>
   }
 }
 
-function mapStateToProps ({ post }) {
-  const { comments } = post
-
+function mapStateToProps ({ comments }) {
   return {
-    post: post.post,
-    comments,
+    comments: comments.comments,
   }
 }
 
 function mapDispatchToProps (dispatch) {
   return {
-    fetchComment: (comment) => dispatch(fetchComment(comment)),
-    fetchPostComments: (comments) => dispatch(fetchPostComments(comments)),
-    fetchPost: (post) => dispatch(fetchPost(post)),
-    fetchPosts: (posts) => dispatch(fetchPosts(posts)),
+    dispatch,
   }
 }
 

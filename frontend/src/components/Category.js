@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router-dom'
 import { connect } from 'react-redux'
+import Categories from './Categories'
 import Posts from './Posts'
 import Api from '../apis'
 
@@ -20,10 +21,11 @@ class Category extends Component {
 
     return (
       <div>
+        <Categories />
         {ready ?
           (<div>
             <h2>
-              Category: {categories.filter(category => category.path === categoryPath)[0].name}
+              Showing only posts under category {categories.filter(category => category.path === categoryPath)[0].name}
             </h2>
             <Posts categoryPath={categoryPath} />
           </div>) :

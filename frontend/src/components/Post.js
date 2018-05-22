@@ -47,26 +47,28 @@ class Post extends Component {
     const { title, author, body, voteScore, commentCount } = post
 
     return ready ? (
-      <div>
-        <h3>{title}</h3>
-        <h4>{author}</h4>
-        <p>{body}</p>
-        <p>Vote score: {voteScore}</p>
-        <p>{commentCount} comments</p>
-        <p>
-          <button onClick={this.upVotePost}>UpVote</button>
-          <button onClick={this.downVotePost}>DownVote</button>
-          <Link to={`/${categoryPath}/${postId}/edit`}>Edit</Link>
-          <button onClick={this.deletePost}>Delete</button>
-        </p>
-        <Comments categoryPath={categoryPath} postId={postId} />
-        <div><p>
-          <Link to={`/${categoryPath}/${postId}/new_comment`}>Add a comment</Link>
-        </p></div>
-        <div><p>
-          <button onClick={this.goBack}>Back</button>
-        </p></div>
-      </div>
+      title ? (
+        <div>
+          <h3>{title}</h3>
+          <h4>{author}</h4>
+          <p>{body}</p>
+          <p>Vote score: {voteScore}</p>
+          <p>{commentCount} comments</p>
+          <p>
+            <button onClick={this.upVotePost}>UpVote</button>
+            <button onClick={this.downVotePost}>DownVote</button>
+            <Link to={`/${categoryPath}/${postId}/edit`}>Edit</Link>
+            <button onClick={this.deletePost}>Delete</button>
+          </p>
+          <Comments categoryPath={categoryPath} postId={postId} />
+          <div><p>
+            <Link to={`/${categoryPath}/${postId}/new_comment`}>Add a comment</Link>
+          </p></div>
+          <div><p>
+            <button onClick={this.goBack}>Back</button>
+          </p></div>
+        </div>
+      ) : <div><p>This post has been deleted.</p></div>
     ) : <div><p>Loading post information...</p></div>
   }
 }
